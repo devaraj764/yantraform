@@ -43,10 +43,20 @@ Yantraform distinguishes between two types of WireGuard members:
 
 Download the pre-built release and run the installer.
 
-**System:** 1 CPU, 512MB RAM, 100MB disk | **Software:** Linux, Node.js >= 22, WireGuard tools (`wg`, `wg-quick`), root access, systemd, `unzip`
+**System:** 1 CPU, 512MB RAM, 100MB disk | **Software:** Linux, Node.js 22, WireGuard tools (`wg`, `wg-quick`), root access, systemd, `unzip`
+
+> **Note:** The pre-built release requires **Node.js 22** specifically. The `better-sqlite3` native addon is compiled against Node 22's ABI and will fail with `ERR_DLOPEN_FAILED` on other major versions (e.g. 18, 20, 24).
 
 ```bash
-curl -fsSLO https://github.com/devaraj764/yantraform/releases/download/v0.0.1/yantraform.zip
+# Install Node.js 22
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+sudo apt-get install -y nodejs
+
+# Install WireGuard tools
+sudo apt-get install -y wireguard-tools
+
+# Download and install Yantraform
+curl -fsSLO https://github.com/devaraj764/yantraform/releases/download/latest/yantraform.zip
 unzip yantraform.zip
 sudo bash install.sh
 ```

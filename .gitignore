@@ -5,6 +5,7 @@ node_modules/
 .output/
 yantraform*.zip
 install.sh
+ignorables/
 
 # TanStack generated files
 .tanstack/
