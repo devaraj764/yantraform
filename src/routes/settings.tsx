@@ -35,6 +35,10 @@ function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [configMessage, setConfigMessage] = useState('');
+  const [sshKey, setSshKey] = useState('');
+  const [sshKeySaved, setSshKeySaved] = useState(false);
+  const [sshSaving, setSshSaving] = useState(false);
+  const [sshMessage, setSshMessage] = useState('');
 
   const configForm = useForm<ServerConfigForm>({
     defaultValues: {
@@ -58,6 +62,8 @@ function SettingsPage() {
       const [s, c] = await Promise.all([api.server.status(), api.server.config()]);
       setStatus(s);
       setPublicKey(c.server_public_key || '');
+      setSshKey(c.ssh_public_key || '');
+      setSshKeySaved(!!c.ssh_public_key);
       configForm.reset({
         server_interface: c.server_interface || '',
         server_port: c.server_port || '',
@@ -74,6 +80,14 @@ function SettingsPage() {
   }, [configForm]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Auto-detect SSH key on first load if not already saved
+  useEffect(() => {
+    if (!loading && !sshKey) {
+      handleDetectSshKey();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const handleSaveConfig = async (data: ServerConfigForm) => {
     setConfigMessage('');
@@ -122,6 +136,37 @@ function SettingsPage() {
       await refresh();
     } catch {} finally {
       setActionLoading('');
+    }
+  };
+
+  const handleDetectSshKey = async () => {
+    setSshSaving(true);
+    setSshMessage('');
+    try {
+      const result = await api.server.detectSshKey();
+      setSshKey(result.key);
+      setSshKeySaved(true);
+      setSshMessage(result.generated ? 'Key generated and saved' : 'Key detected and saved');
+      setTimeout(() => setSshMessage(''), 3000);
+    } catch {
+      setSshMessage('Failed to detect/generate SSH key');
+    } finally {
+      setSshSaving(false);
+    }
+  };
+
+  const handleSaveSshKey = async () => {
+    setSshSaving(true);
+    setSshMessage('');
+    try {
+      await api.server.updateConfig({ ssh_public_key: sshKey.trim() });
+      setSshKeySaved(true);
+      setSshMessage('SSH key saved');
+      setTimeout(() => setSshMessage(''), 3000);
+    } catch {
+      setSshMessage('Failed to save');
+    } finally {
+      setSshSaving(false);
     }
   };
 
@@ -210,6 +255,51 @@ function SettingsPage() {
             <Key className="h-4 w-4 mr-2" />
             {actionLoading === 'keys' ? 'Generating...' : publicKey ? 'Regenerate Keys' : 'Generate Keys'}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">SSH Public Key</CardTitle>
+          <CardDescription>
+            Used by peer setup scripts to authorize SSH access from this server. Auto-detected on load.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {sshKeySaved ? (
+            <>
+              <div>
+                <Label className="text-xs text-muted-foreground">Public Key</Label>
+                <p className="font-mono text-xs break-all bg-muted p-2 rounded-md mt-1">{sshKey}</p>
+              </div>
+              {sshMessage && <span className="text-sm text-muted-foreground">{sshMessage}</span>}
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">No SSH key configured.</p>
+              <div className="space-y-2">
+                <Label htmlFor="ssh-key">Paste manually (optional)</Label>
+                <Input
+                  id="ssh-key"
+                  value={sshKey}
+                  onChange={(e) => setSshKey(e.target.value)}
+                  placeholder="ssh-ed25519 AAAA... user@host"
+                  className="font-mono text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Button variant="outline" onClick={handleDetectSshKey} disabled={sshSaving}>
+                  <Key className="h-4 w-4 mr-2" />
+                  {sshSaving ? 'Detecting...' : 'Detect / Generate Key'}
+                </Button>
+                <Button variant="outline" onClick={handleSaveSshKey} disabled={sshSaving || !sshKey}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Manually
+                </Button>
+                {sshMessage && <span className="text-sm text-muted-foreground">{sshMessage}</span>}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

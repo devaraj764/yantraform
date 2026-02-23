@@ -139,12 +139,6 @@ src/
 
 data/
 └── yantraform.db        # SQLite database (auto-created)
-
-public/
-└── agent-bin/           # Pre-built yantra-agent binaries
-    ├── yantra-agent-linux-amd64
-    ├── yantra-agent-linux-arm64
-    └── yantra-agent-linux-armv7
 ```
 
 ## Configuration
@@ -161,12 +155,12 @@ All server configuration is managed through the Settings page in the UI:
 
 ## Yantra Agent
 
-Yantraform includes a remote agent binary (`yantra-agent`) that is installed on agent machines. Once installed, agents provide:
+The [yantra-agent](https://github.com/devaraj764/yantraform-agent) is a remote binary installed on agent machines. Once installed, agents provide:
 
 - System information monitoring (hostname, OS, CPU, memory, disk, uptime, load)
 - Remote command execution from the dashboard
 
-The agent communicates over the VPN on port `9101` and authenticates using a per-agent access key. Pre-built binaries are included for amd64, arm64, and armv7 Linux architectures. Installation is guided step-by-step from the Agents page in the UI.
+The agent communicates over the VPN on port `9101` and authenticates using a per-agent access key. Pre-built binaries are available for amd64, arm64, and armv7 Linux architectures. Installation is guided from the Agents page in the UI.
 
 ## License
 

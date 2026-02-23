@@ -5,7 +5,6 @@ import {
   getNextAvailableIP,
   createPeer as dbCreatePeer,
   getSetting,
-  generateAccessKey,
 } from '~/server/db';
 import {
   getInterfaceStatus,
@@ -50,8 +49,6 @@ export const Route = createFileRoute('/api/peers/')({
             email: peer.email,
             device: peer.device,
             publicKey: peer.public_key,
-            accessKey: peer.peer_type === 'agent' ? peer.access_key : '',
-            peerType: peer.peer_type || 'peer',
             hostname: peer.hostname || '',
             allowedIps: peer.allowed_ips,
             address: peer.address,
@@ -79,8 +76,6 @@ export const Route = createFileRoute('/api/peers/')({
         const body = await request.json();
         const { privateKey, publicKey } = await generateKeyPair();
         const presharedKey = await generatePresharedKey();
-        const peerType = body.peerType || 'peer';
-        const accessKey = peerType === 'agent' ? generateAccessKey() : '';
         const address = await getNextAvailableIP();
         const dns = body.dns || (await getSetting('server_dns')) || '1.1.1.1';
         const id = crypto.randomUUID();
@@ -92,7 +87,7 @@ export const Route = createFileRoute('/api/peers/')({
           private_key: privateKey,
           public_key: publicKey,
           preshared_key: presharedKey,
-          access_key: accessKey,
+          access_key: '',
           allowed_ips: body.allowedIps || '0.0.0.0/0, ::/0',
           address,
           dns,
@@ -100,7 +95,7 @@ export const Route = createFileRoute('/api/peers/')({
           enabled: 1,
           device: body.device || '',
           network_type: body.networkType || 'remote',
-          peer_type: peerType,
+          peer_type: 'peer',
           hostname: '',
         });
 
@@ -113,7 +108,7 @@ export const Route = createFileRoute('/api/peers/')({
           await updateHostsFile();
         } catch {}
 
-        return Response.json({ id, address, publicKey, accessKey, peerType });
+        return Response.json({ id, address, publicKey });
       },
     },
   },

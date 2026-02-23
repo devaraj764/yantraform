@@ -2,7 +2,6 @@ import { Link, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard,
   Users,
-  Server,
   Monitor,
   Flame,
   Globe,
@@ -20,7 +19,6 @@ import { Separator } from '~/components/ui/separator';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/servers', label: 'Agents', icon: Server },
   { to: '/peers', label: 'Peers', icon: Monitor },
   { to: '/firewall', label: 'Firewall', icon: Flame },
   { to: '/dns', label: 'DNS', icon: Globe },

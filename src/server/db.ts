@@ -123,12 +123,6 @@ export async function getPeerByPublicKey(pk: string): Promise<PeerRow | null> {
   return row ?? null;
 }
 
-export function generateAccessKey(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 export async function createPeer(peer: Omit<PeerRow, 'created_at' | 'updated_at'>): Promise<void> {
   const db = await ensureMigrated();
   await db('peers').insert(peer);

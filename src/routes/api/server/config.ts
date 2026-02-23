@@ -20,6 +20,7 @@ export const Route = createFileRoute('/api/server/config')({
         const allowedKeys = [
           'server_address', 'server_port', 'server_dns', 'server_endpoint',
           'server_interface', 'server_post_up', 'server_post_down', 'server_local_ip',
+          'ssh_public_key',
         ];
 
         for (const [key, value] of Object.entries(body)) {

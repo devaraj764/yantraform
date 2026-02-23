@@ -35,7 +35,8 @@ export const Route = createFileRoute('/api/peers/$id')({
         if (body.dns !== undefined) mapped.dns = body.dns;
         if (body.allowedIps !== undefined) mapped.allowed_ips = body.allowedIps;
         if (body.persistentKeepalive !== undefined) mapped.persistent_keepalive = body.persistentKeepalive;
-        if (body.peerType !== undefined) mapped.peer_type = body.peerType;
+        if (body.device !== undefined) mapped.device = body.device;
+        if (body.networkType !== undefined) mapped.network_type = body.networkType;
 
         await dbUpdatePeer(params.id, mapped as any);
 

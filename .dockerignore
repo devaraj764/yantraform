@@ -10,3 +10,4 @@ bun.lockb
 .env.*
 .vscode/
 .idea/
+ignorables/

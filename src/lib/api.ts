@@ -88,16 +88,8 @@ export const api = {
       request<{ dataUrl: string; config: string }>(`/api/peers/${id}/qrcode`),
     config: (id: string) =>
       request<{ config: string; filename: string }>(`/api/peers/${id}/config`),
-    agentHealth: (id: string) =>
-      request<{ status: string; version: string }>(`/api/peers/${id}/agent?path=health`),
-    agentSysinfo: (id: string) =>
-      request<AgentSysinfo>(`/api/peers/${id}/agent?path=sysinfo`),
-    agentExec: (id: string, command: string) =>
-      request<{ stdout: string; stderr: string; exit_code: number }>(`/api/peers/${id}/agent`, {
-        method: 'POST',
-        body: JSON.stringify({ command }),
-      }),
-    agentInstallScript: (id: string) => `/api/peers/${id}/agent-install`,
+    setupScript: (id: string) =>
+      request<{ script: string; hasSshKey: boolean }>(`/api/peers/${id}/setup-script`),
   },
 
   server: {
@@ -130,6 +122,8 @@ export const api = {
         method: 'DELETE',
         body: JSON.stringify({ port, protocol }),
       }),
+    detectSshKey: () =>
+      request<{ key: string; generated: boolean }>('/api/server/ssh-key', { method: 'POST' }),
   },
 
   dns: {
@@ -166,8 +160,6 @@ export interface PeerWithStats {
   email: string;
   device: string;
   publicKey: string;
-  accessKey: string;
-  peerType: 'agent' | 'peer';
   allowedIps: string;
   address: string;
   dns: string;
@@ -249,13 +241,3 @@ export interface DnsStatus {
   availableTargets: DnsAvailableTarget[];
 }
 
-export interface AgentSysinfo {
-  hostname: string;
-  os: string;
-  kernel: string;
-  cpu: { model: string; cores: number };
-  memory: { total_mb: number; available_mb: number };
-  disk: { total_gb: number; used_gb: number; available_gb: number };
-  uptime_seconds: number;
-  load: [number, number, number];
-}

@@ -18,6 +18,7 @@ import {
   Smartphone,
   Tablet,
   Laptop,
+  Terminal,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -37,6 +38,7 @@ import {
 } from '~/components/ui/alert-dialog';
 import { PeerForm } from '~/components/PeerForm';
 import { QRCodeModal } from '~/components/QRCodeModal';
+import { SetupScriptModal } from '~/components/SetupScriptModal';
 import { TrafficChart } from '~/components/TrafficChart';
 import { api, type PeerWithStats } from '~/lib/api';
 import { formatBytes, formatTimeAgo } from '~/lib/utils';
@@ -68,11 +70,12 @@ function ClientsPage() {
   const [deletingPeer, setDeletingPeer] = useState<PeerWithStats | null>(null);
   const [qrPeer, setQrPeer] = useState<PeerWithStats | null>(null);
   const [expandedPeer, setExpandedPeer] = useState<string | null>(null);
+  const [scriptPeer, setScriptPeer] = useState<PeerWithStats | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const all = await api.peers.list();
-      setPeers(all.filter((p) => p.peerType !== 'agent'));
+      setPeers(all);
     } catch {} finally {
       setLoading(false);
     }
@@ -85,7 +88,7 @@ function ClientsPage() {
   }, [refresh]);
 
   const handleCreate = async (data: any) => {
-    await api.peers.create({ ...data, peerType: 'peer' });
+    await api.peers.create(data);
     await refresh();
   };
 
@@ -264,6 +267,11 @@ function ClientsPage() {
                     <Button variant="ghost" size="icon" onClick={() => setQrPeer(peer)} title="QR Code">
                       <QrCode className="h-4 w-4" />
                     </Button>
+                    {peer.device.toLowerCase().includes('linux') && (
+                      <Button variant="ghost" size="icon" onClick={() => setScriptPeer(peer)} title="Setup Script">
+                        <Terminal className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => handleDownload(peer)} title="Download Config">
                       <Download className="h-4 w-4" />
                     </Button>
@@ -308,7 +316,6 @@ function ClientsPage() {
         onClose={() => setShowCreate(false)}
         onSubmit={handleCreate}
         mode="create"
-        forcePeerType="peer"
       />
 
       {editingPeer && (
@@ -317,7 +324,6 @@ function ClientsPage() {
           onClose={() => setEditingPeer(null)}
           onSubmit={handleEdit}
           mode="edit"
-          forcePeerType="peer"
           initialData={{
             name: editingPeer.name,
             email: editingPeer.email,
@@ -326,13 +332,16 @@ function ClientsPage() {
             allowedIps: editingPeer.allowedIps,
             persistentKeepalive: editingPeer.persistentKeepalive,
             networkType: editingPeer.networkType,
-            peerType: editingPeer.peerType,
           }}
         />
       )}
 
       {qrPeer && (
         <QRCodeModal open={true} onClose={() => setQrPeer(null)} peerId={qrPeer.id} peerName={qrPeer.name} />
+      )}
+
+      {scriptPeer && (
+        <SetupScriptModal open={true} onClose={() => setScriptPeer(null)} peerId={scriptPeer.id} peerName={scriptPeer.name} />
       )}
 
       <AlertDialog open={!!deletingPeer} onOpenChange={(v) => !v && setDeletingPeer(null)}>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Wifi, Globe, Server, Monitor } from 'lucide-react';
+import { Wifi, Globe } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -27,7 +27,6 @@ interface PeerFormData {
   allowedIps: string;
   persistentKeepalive: number;
   networkType: 'local' | 'remote';
-  peerType: 'agent' | 'peer';
 }
 
 interface PeerFormProps {
@@ -36,10 +35,9 @@ interface PeerFormProps {
   onSubmit: (data: PeerFormData) => Promise<void>;
   initialData?: Partial<PeerFormData>;
   mode: 'create' | 'edit';
-  forcePeerType?: 'agent' | 'peer';
 }
 
-export function PeerForm({ open, onClose, onSubmit, initialData, mode, forcePeerType }: PeerFormProps) {
+export function PeerForm({ open, onClose, onSubmit, initialData, mode }: PeerFormProps) {
   const [form, setForm] = useState<PeerFormData>({
     name: initialData?.name || '',
     email: initialData?.email || '',
@@ -48,7 +46,6 @@ export function PeerForm({ open, onClose, onSubmit, initialData, mode, forcePeer
     allowedIps: initialData?.allowedIps || '0.0.0.0/0, ::/0',
     persistentKeepalive: initialData?.persistentKeepalive ?? 25,
     networkType: initialData?.networkType || 'remote',
-    peerType: forcePeerType || initialData?.peerType || 'peer',
   });
   const [saving, setSaving] = useState(false);
 
@@ -71,14 +68,12 @@ export function PeerForm({ open, onClose, onSubmit, initialData, mode, forcePeer
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {mode === 'create'
-                ? `New ${forcePeerType === 'agent' ? 'Agent' : 'Peer'}`
-                : `Edit ${forcePeerType === 'agent' ? 'Agent' : 'Peer'}`}
+              {mode === 'create' ? 'New Peer' : 'Edit Peer'}
             </DialogTitle>
             <DialogDescription>
               {mode === 'create'
-                ? `Create a new VPN ${forcePeerType === 'agent' ? 'agent' : 'peer'}. Keys and IP will be auto-generated.`
-                : `Update ${forcePeerType === 'agent' ? 'agent' : 'peer'} settings.`}
+                ? 'Create a new VPN peer. Keys and IP will be auto-generated.'
+                : 'Update peer settings.'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -136,42 +131,6 @@ export function PeerForm({ open, onClose, onSubmit, initialData, mode, forcePeer
                   : 'Peer connects from the internet (public IP)'}
               </p>
             </div>
-            {!forcePeerType && (
-              <div className="space-y-2">
-                <Label>Peer Type</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
-                      form.peerType === 'agent'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-input hover:bg-muted'
-                    }`}
-                    onClick={() => setForm((f) => ({ ...f, peerType: 'agent', device: '' }))}
-                  >
-                    <Server className="h-4 w-4" />
-                    Agent
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
-                      form.peerType === 'peer'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-input hover:bg-muted'
-                    }`}
-                    onClick={() => setForm((f) => ({ ...f, peerType: 'peer', device: '' }))}
-                  >
-                    <Monitor className="h-4 w-4" />
-                    Peer
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {form.peerType === 'agent'
-                    ? 'Runs yantra-agent — exposes system info and remote commands'
-                    : 'Connects to the VPN to access services'}
-                </p>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="device">Device</Label>
               <Select value={form.device} onValueChange={(v) => setForm((f) => ({ ...f, device: v }))}>
@@ -179,26 +138,14 @@ export function PeerForm({ open, onClose, onSubmit, initialData, mode, forcePeer
                   <SelectValue placeholder="Select device type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {form.peerType === 'agent' ? (
-                    <>
-                      <SelectItem value="Ubuntu Server">Ubuntu Server</SelectItem>
-                      <SelectItem value="Debian Server">Debian Server</SelectItem>
-                      <SelectItem value="CentOS Server">CentOS Server</SelectItem>
-                      <SelectItem value="Fedora Server">Fedora Server</SelectItem>
-                      <SelectItem value="Raspberry Pi">Raspberry Pi</SelectItem>
-                      <SelectItem value="Linux Server">Linux Server (Other)</SelectItem>
-                    </>
-                  ) : (
-                    <>
-                      <SelectItem value="Windows PC">Windows PC</SelectItem>
-                      <SelectItem value="Mac">Mac</SelectItem>
-                      <SelectItem value="Linux PC">Linux PC</SelectItem>
-                      <SelectItem value="iPhone">iPhone</SelectItem>
-                      <SelectItem value="iPad">iPad</SelectItem>
-                      <SelectItem value="Android Phone">Android Phone</SelectItem>
-                      <SelectItem value="Android Tablet">Android Tablet</SelectItem>
-                    </>
-                  )}
+                  <SelectItem value="Windows PC">Windows PC</SelectItem>
+                  <SelectItem value="Mac">Mac</SelectItem>
+                  <SelectItem value="Linux PC">Linux PC</SelectItem>
+                  <SelectItem value="Linux Server">Linux Server</SelectItem>
+                  <SelectItem value="iPhone">iPhone</SelectItem>
+                  <SelectItem value="iPad">iPad</SelectItem>
+                  <SelectItem value="Android Phone">Android Phone</SelectItem>
+                  <SelectItem value="Android Tablet">Android Tablet</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -242,7 +189,7 @@ export function PeerForm({ open, onClose, onSubmit, initialData, mode, forcePeer
               {saving
                 ? 'Saving...'
                 : mode === 'create'
-                  ? `Create ${forcePeerType === 'agent' ? 'Agent' : 'Peer'}`
+                  ? 'Create Peer'
                   : 'Save Changes'}
             </Button>
           </DialogFooter>
