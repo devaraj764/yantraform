@@ -37,15 +37,13 @@ Yantraform distinguishes between two types of WireGuard members:
 | Build       | [Vite](https://vite.dev/)                                   |
 | Language    | TypeScript                                                   |
 
-## Prerequisites
-
-- **Node.js** >= 22
-- **WireGuard** installed on the host (`wg` and `wg-quick`)
-- **Root or sudo access** — required for managing WireGuard interfaces and firewall rules
-- **dnsmasq** (optional) — installed automatically if you enable the DNS feature
-- **Linux** — the server-side WireGuard and firewall management relies on Linux system commands
-
 ## Install
+
+### Quick Install (Recommended)
+
+Download the pre-built release and run the installer.
+
+**System:** 1 CPU, 512MB RAM, 100MB disk | **Software:** Linux, Node.js >= 22, WireGuard tools (`wg`, `wg-quick`), root access, systemd, `unzip`
 
 ```bash
 curl -fsSLO https://github.com/devaraj764/yantraform/releases/download/v0.0.1/yantraform.zip
@@ -53,11 +51,7 @@ unzip yantraform.zip
 sudo bash install.sh
 ```
 
-This installs Yantraform to `/opt/yantraform/`, sets up a systemd service, and starts the dashboard on port `51821`.
-
 Dashboard: **http://\<server-ip\>:51821** | Default password: `admin`
-
-### Manage the service
 
 ```bash
 sudo systemctl status yantraform
@@ -65,22 +59,22 @@ sudo systemctl restart yantraform
 sudo journalctl -u yantraform -f
 ```
 
-## Docker Install
+### Docker Install
+
+No host dependencies needed — WireGuard tools and Node.js are included in the image.
+
+**System:** 1 CPU, 512MB RAM, 500MB disk (image) | **Software:** Docker
 
 ```bash
-docker run --cap-add NET_ADMIN --cap-add NET_RAW \
+docker run -d --cap-add NET_ADMIN --cap-add NET_RAW \
   -v yantraform-data:/app/data \
   -p 51821:51821 \
-  yantraform
+  ghcr.io/devaraj764/yantraform:latest
 ```
 
-To build the image locally:
+### Development
 
-```bash
-docker build -t yantraform .
-```
-
-## Development
+**System:** 2 CPU, 2GB RAM (Vite build needs memory) | **Software:** Node.js >= 22, WireGuard tools (`wg`, `wg-quick`), root/sudo access
 
 ```bash
 npm install

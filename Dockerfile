@@ -1,5 +1,7 @@
 # ---- Build stage ----
-FROM node:22 AS build
+FROM node:22-alpine AS build
+
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
@@ -10,11 +12,9 @@ COPY . .
 RUN npm run build
 
 # ---- Runtime stage ----
-FROM node:22-slim
+FROM node:22-alpine
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends wireguard-tools iptables iproute2 && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache wireguard-tools iptables iproute2
 
 WORKDIR /app
 
