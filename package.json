@@ -1,13 +1,14 @@
 {
   "name": "yantraform",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "sudo env \"PATH=$PATH\" vite dev",
     "build": "vite build && node scripts/fix-knex-output.mjs",
     "start": "sudo env \"PATH=$PATH\" PORT=51821 HOST=0.0.0.0 node .output/server/index.mjs",
     "dev:no-sudo": "vite dev",
-    "start:no-sudo": "node .output/server/index.mjs"
+    "start:no-sudo": "node .output/server/index.mjs",
+    "release": "sudo zip -qr yantraform.zip .output install.sh"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.4",

@@ -1,0 +1,12 @@
+node_modules/
+.output/
+data/
+.git/
+.gitignore
+.tanstack/
+*.md
+bun.lockb
+.env
+.env.*
+.vscode/
+.idea/

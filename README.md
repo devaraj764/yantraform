@@ -39,49 +39,55 @@ Yantraform distinguishes between two types of WireGuard members:
 
 ## Prerequisites
 
-- **Node.js** >= 18
+- **Node.js** >= 22
 - **WireGuard** installed on the host (`wg` and `wg-quick`)
 - **Root or sudo access** — required for managing WireGuard interfaces and firewall rules
 - **dnsmasq** (optional) — installed automatically if you enable the DNS feature
 - **Linux** — the server-side WireGuard and firewall management relies on Linux system commands
 
-## Quick Start
+## Install
 
 ```bash
-# Install dependencies
+curl -fsSLO https://github.com/devaraj764/yantraform/releases/download/v0.0.1/yantraform.zip
+unzip yantraform.zip
+sudo bash install.sh
+```
+
+This installs Yantraform to `/opt/yantraform/`, sets up a systemd service, and starts the dashboard on port `51821`.
+
+Dashboard: **http://\<server-ip\>:51821** | Default password: `admin`
+
+### Manage the service
+
+```bash
+sudo systemctl status yantraform
+sudo systemctl restart yantraform
+sudo journalctl -u yantraform -f
+```
+
+## Docker Install
+
+```bash
+docker run --cap-add NET_ADMIN --cap-add NET_RAW \
+  -v yantraform-data:/app/data \
+  -p 51821:51821 \
+  yantraform
+```
+
+To build the image locally:
+
+```bash
+docker build -t yantraform .
+```
+
+## Development
+
+```bash
 npm install
-
-# Start in development mode (uses sudo for WireGuard access)
 npm run dev
-
-# Or without sudo (limited — cannot manage WireGuard interfaces)
-npm run dev:no-sudo
 ```
 
 The dashboard will be available at **http://localhost:51821**.
-
-Default credentials:
-- **Password:** `admin`
-
-Change the password immediately after first login via Settings.
-
-## Production Build
-
-```bash
-# Build the application
-npm run build
-
-# Start the production server
-npm run start
-```
-
-The production server runs on port `51821` bound to `0.0.0.0`.
-
-To run without sudo:
-
-```bash
-npm run start:no-sudo
-```
 
 ## Project Structure
 
