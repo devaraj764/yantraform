@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { Play, Square, RotateCw, Save, Key, Lock, Locate } from 'lucide-react';
+import { Play, Square, RotateCw, Save, Key, Lock, Locate, Info } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -244,12 +244,20 @@ function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {publicKey && (
-            <div>
-              <Label className="text-xs text-muted-foreground">Public Key</Label>
-              <p className="font-mono text-xs break-all bg-muted p-2 rounded-md mt-1">
-                {publicKey}
-              </p>
-            </div>
+            <>
+              <div>
+                <Label className="text-xs text-muted-foreground">Public Key</Label>
+                <p className="font-mono text-xs break-all bg-muted p-2 rounded-md mt-1">
+                  {publicKey}
+                </p>
+              </div>
+              <div className="flex items-start gap-2 rounded-md border border-blue-500/50 bg-blue-500/10 p-3">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  If the VPN is not working for peers, try regenerating the keys and restarting the server, then re-add your peers.
+                </p>
+              </div>
+            </>
           )}
           <Button variant="outline" onClick={handleGenerateKeys} disabled={!!actionLoading}>
             <Key className="h-4 w-4 mr-2" />

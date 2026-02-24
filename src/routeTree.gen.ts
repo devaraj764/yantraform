@@ -13,7 +13,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PeersRouteImport } from './routes/peers'
 import { Route as FirewallRouteImport } from './routes/firewall'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PeersIdRouteImport } from './routes/peers.$id'
+import { Route as PeersIdRouteImport } from './routes/peers_.$id'
 import { Route as ApiStatsIndexRouteImport } from './routes/api/stats/index'
 import { Route as ApiPeersIndexRouteImport } from './routes/api/peers/index'
 import { Route as ApiStatsPeerIdRouteImport } from './routes/api/stats/$peerId'
@@ -60,9 +60,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const PeersIdRoute = PeersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => PeersRoute,
+  id: '/peers_/$id',
+  path: '/peers/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiStatsIndexRoute = ApiStatsIndexRouteImport.update({
   id: '/api/stats/',
@@ -188,7 +188,7 @@ const ApiPeersIdConfigRoute = ApiPeersIdConfigRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/firewall': typeof FirewallRoute
-  '/peers': typeof PeersRouteWithChildren
+  '/peers': typeof PeersRoute
   '/settings': typeof SettingsRoute
   '/peers/$id': typeof PeersIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -219,7 +219,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/firewall': typeof FirewallRoute
-  '/peers': typeof PeersRouteWithChildren
+  '/peers': typeof PeersRoute
   '/settings': typeof SettingsRoute
   '/peers/$id': typeof PeersIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
@@ -251,9 +251,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/firewall': typeof FirewallRoute
-  '/peers': typeof PeersRouteWithChildren
+  '/peers': typeof PeersRoute
   '/settings': typeof SettingsRoute
-  '/peers/$id': typeof PeersIdRoute
+  '/peers_/$id': typeof PeersIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/password': typeof ApiAuthPasswordRoute
@@ -348,7 +348,7 @@ export interface FileRouteTypes {
     | '/firewall'
     | '/peers'
     | '/settings'
-    | '/peers/$id'
+    | '/peers_/$id'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/password'
@@ -378,8 +378,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FirewallRoute: typeof FirewallRoute
-  PeersRoute: typeof PeersRouteWithChildren
+  PeersRoute: typeof PeersRoute
   SettingsRoute: typeof SettingsRoute
+  PeersIdRoute: typeof PeersIdRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthPasswordRoute: typeof ApiAuthPasswordRoute
@@ -430,12 +431,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/peers/$id': {
-      id: '/peers/$id'
-      path: '/$id'
+    '/peers_/$id': {
+      id: '/peers_/$id'
+      path: '/peers/$id'
       fullPath: '/peers/$id'
       preLoaderRoute: typeof PeersIdRouteImport
-      parentRoute: typeof PeersRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/stats/': {
       id: '/api/stats/'
@@ -608,16 +609,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface PeersRouteChildren {
-  PeersIdRoute: typeof PeersIdRoute
-}
-
-const PeersRouteChildren: PeersRouteChildren = {
-  PeersIdRoute: PeersIdRoute,
-}
-
-const PeersRouteWithChildren = PeersRoute._addFileChildren(PeersRouteChildren)
-
 interface ApiPeersIdRouteChildren {
   ApiPeersIdConfigRoute: typeof ApiPeersIdConfigRoute
   ApiPeersIdQrcodeRoute: typeof ApiPeersIdQrcodeRoute
@@ -643,8 +634,9 @@ const ApiPeersIdRouteWithChildren = ApiPeersIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FirewallRoute: FirewallRoute,
-  PeersRoute: PeersRouteWithChildren,
+  PeersRoute: PeersRoute,
   SettingsRoute: SettingsRoute,
+  PeersIdRoute: PeersIdRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthPasswordRoute: ApiAuthPasswordRoute,

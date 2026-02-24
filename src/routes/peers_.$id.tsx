@@ -20,7 +20,7 @@ import { TrafficChart } from '~/components/TrafficChart';
 import { api, type PeerWithStats, type SystemInfo, type SshExecResult } from '~/lib/api';
 import { formatBytes } from '~/lib/utils';
 
-export const Route = createFileRoute('/peers/$id')({
+export const Route = createFileRoute('/peers_/$id')({
   component: PeerDetailPage,
 });
 
