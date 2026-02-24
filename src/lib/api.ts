@@ -90,6 +90,13 @@ export const api = {
       request<{ config: string; filename: string }>(`/api/peers/${id}/config`),
     setupScript: (id: string) =>
       request<{ steps: { title: string; description: string; command?: string; commands?: Record<string, string> }[]; hasSshKey: boolean }>(`/api/peers/${id}/setup-script`),
+    systemInfo: (id: string) =>
+      request<SystemInfo>(`/api/peers/${id}/system-info`),
+    sshExec: (id: string, command: string) =>
+      request<SshExecResult>(`/api/peers/${id}/ssh-exec`, {
+        method: 'POST',
+        body: JSON.stringify({ command }),
+      }),
   },
 
   server: {
@@ -130,25 +137,6 @@ export const api = {
       request<{ key: string; generated: boolean }>('/api/server/ssh-key', { method: 'POST' }),
   },
 
-  dns: {
-    status: () => request<DnsStatus>('/api/server/dns'),
-    action: (action: string) =>
-      request<{ success: boolean; message: string }>('/api/server/dns', {
-        method: 'POST',
-        body: JSON.stringify({ action }),
-      }),
-    addRecord: (hostname: string, ip: string) =>
-      request<{ success: boolean; message: string }>('/api/server/dns', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'add-record', hostname, ip }),
-      }),
-    deleteRecord: (hostname: string, ip: string) =>
-      request<{ success: boolean; message: string }>('/api/server/dns', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'delete-record', hostname, ip }),
-      }),
-  },
-
   stats: {
     global: (range: string) =>
       request<TrafficDataPoint[]>(`/api/stats?range=${range}`),
@@ -177,6 +165,9 @@ export interface PeerWithStats {
   transferRx: number;
   transferTx: number;
   endpoint: string;
+  pingAlive: boolean;
+  pingLatencyMs: number | null;
+  lastPingCheck: number;
 }
 
 export interface ServerStatus {
@@ -222,26 +213,21 @@ export interface FirewallStatus {
   parsedRules: FirewallRule[];
 }
 
-export interface DnsmasqStatus {
-  installed: boolean;
-  running: boolean;
-  configExists: boolean;
-  version: string;
-}
-
-export interface DnsRecord {
+export interface SystemInfo {
   hostname: string;
-  ip: string;
+  os: string;
+  osType: 'Linux PC' | 'Linux Server';
+  uptime: string;
+  cpuCores: number;
+  memTotal: number;
+  memUsed: number;
+  diskTotal: number;
+  diskUsed: number;
+  loadAvg: string;
 }
 
-export interface DnsAvailableTarget {
-  ip: string;
-  name: string;
+export interface SshExecResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
 }
-
-export interface DnsStatus {
-  dnsmasq: DnsmasqStatus;
-  records: DnsRecord[];
-  availableTargets: DnsAvailableTarget[];
-}
-

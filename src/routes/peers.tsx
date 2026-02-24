@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
@@ -19,6 +19,8 @@ import {
   Tablet,
   Laptop,
   Terminal,
+  Activity,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -204,6 +206,12 @@ function ClientsPage() {
                       </Badge>
                       {!peer.enabled && <Badge variant="secondary">Disabled</Badge>}
                       {peer.enabled && peer.connected && <Badge variant="success">Connected</Badge>}
+                      {peer.enabled && peer.connected && peer.pingLatencyMs != null && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Activity className="h-3 w-3 text-green-500" />
+                          {peer.pingLatencyMs.toFixed(1)}ms
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
                       <span className="font-mono">{peer.address}</span>
@@ -264,37 +272,59 @@ function ClientsPage() {
                       checked={peer.enabled}
                       onCheckedChange={(checked) => handleToggle(peer, checked)}
                     />
-                    <Button variant="ghost" size="icon" onClick={() => setQrPeer(peer)} title="QR Code">
-                      <QrCode className="h-4 w-4" />
-                    </Button>
-                    {peer.device.toLowerCase().includes('linux') && (
-                      <Button variant="ghost" size="icon" onClick={() => setScriptPeer(peer)} title="Setup Script">
-                        <Terminal className="h-4 w-4" />
-                      </Button>
+                    {peer.enabled && peer.connected ? (
+                      <>
+                        {peer.device.toLowerCase().includes('linux') && (
+                          <Link to="/peers/$id" params={{ id: peer.id }}>
+                            <Button variant="ghost" size="icon" title="Manage">
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedPeer(expandedPeer === peer.id ? null : peer.id)}
+                          className="text-xs"
+                        >
+                          {expandedPeer === peer.id ? 'Hide' : 'Stats'}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => setQrPeer(peer)} title="QR Code">
+                          <QrCode className="h-4 w-4" />
+                        </Button>
+                        {peer.device.toLowerCase().includes('linux') && (
+                          <Button variant="ghost" size="icon" onClick={() => setScriptPeer(peer)} title="Setup Script">
+                            <Terminal className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => handleDownload(peer)} title="Download Config">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setEditingPeer(peer)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeletingPeer(peer)}
+                          title="Delete"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedPeer(expandedPeer === peer.id ? null : peer.id)}
+                          className="text-xs"
+                        >
+                          {expandedPeer === peer.id ? 'Hide' : 'Stats'}
+                        </Button>
+                      </>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => handleDownload(peer)} title="Download Config">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setEditingPeer(peer)} title="Edit">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeletingPeer(peer)}
-                      title="Delete"
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setExpandedPeer(expandedPeer === peer.id ? null : peer.id)}
-                      className="text-xs"
-                    >
-                      {expandedPeer === peer.id ? 'Hide' : 'Stats'}
-                    </Button>
                   </div>
                 </div>
                 {expandedPeer === peer.id && (

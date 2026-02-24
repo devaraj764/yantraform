@@ -4,7 +4,6 @@ import {
   Users,
   Monitor,
   Flame,
-  Globe,
   Settings,
   Shield,
   LogOut,
@@ -21,7 +20,6 @@ const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/peers', label: 'Peers', icon: Monitor },
   { to: '/firewall', label: 'Firewall', icon: Flame },
-  { to: '/dns', label: 'DNS', icon: Globe },
   { to: '/settings', label: 'Settings', icon: Settings },
 ] as const;
 

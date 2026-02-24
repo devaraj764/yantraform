@@ -8,7 +8,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { api } from '~/lib/api';
-import { Copy, Check, TriangleAlert } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 
 const OS_OPTIONS = [
   { id: 'ubuntu', label: 'Ubuntu' },
@@ -17,8 +17,6 @@ const OS_OPTIONS = [
   { id: 'centos', label: 'CentOS' },
   { id: 'arch', label: 'Arch' },
   { id: 'alpine', label: 'Alpine' },
-  { id: 'macos', label: 'macOS' },
-  { id: 'windows', label: 'Windows' },
 ] as const;
 
 type OsId = (typeof OS_OPTIONS)[number]['id'];
@@ -49,13 +47,11 @@ export function SetupScriptModal({ open, onClose, peerId, peerName }: SetupScrip
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedOs, setSelectedOs] = useState<OsId>('ubuntu');
-  const [copiedStep, setCopiedStep] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open || !peerId) return;
     setLoading(true);
     setError('');
-    setCopiedStep(null);
     api.peers.setupScript(peerId)
       .then((result) => {
         setSteps(result.steps);
@@ -65,29 +61,13 @@ export function SetupScriptModal({ open, onClose, peerId, peerName }: SetupScrip
       .finally(() => setLoading(false));
   }, [open, peerId]);
 
-  const copyCommand = async (index: number) => {
-    const cmd = getCommandForOs(steps[index], selectedOs);
-    await navigator.clipboard.writeText(cmd);
-    setCopiedStep(index);
-    setTimeout(() => setCopiedStep(null), 2000);
-  };
-
-  const copyAll = async () => {
-    const full = steps
-      .map((s, i) => `# Step ${i + 1}: ${s.title}\n${getCommandForOs(s, selectedOs)}`)
-      .join('\n\n');
-    await navigator.clipboard.writeText(full);
-    setCopiedStep(-1);
-    setTimeout(() => setCopiedStep(null), 2000);
-  };
-
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Setup Guide — {peerName}</DialogTitle>
           <DialogDescription>
-            Run these commands on your remote machine.
+            Select your OS and run each command on your remote machine.
           </DialogDescription>
         </DialogHeader>
 
@@ -112,28 +92,21 @@ export function SetupScriptModal({ open, onClose, peerId, peerName }: SetupScrip
                 </div>
               )}
 
-              {/* OS selector + Copy All */}
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {OS_OPTIONS.map((os) => (
-                    <button
-                      key={os.id}
-                      onClick={() => setSelectedOs(os.id)}
-                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                        selectedOs === os.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                      }`}
-                    >
-                      {os.label}
-                    </button>
-                  ))}
-                  <div className="flex-1" />
-                  <Button variant="outline" size="sm" className="text-xs" onClick={copyAll}>
-                    {copiedStep === -1 ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                    {copiedStep === -1 ? 'Copied!' : 'Copy All'}
-                  </Button>
-                </div>
+              {/* OS selector */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {OS_OPTIONS.map((os) => (
+                  <button
+                    key={os.id}
+                    onClick={() => setSelectedOs(os.id)}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      selectedOs === os.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {os.label}
+                  </button>
+                ))}
               </div>
 
               {/* All steps in a scrollable list */}
@@ -142,27 +115,14 @@ export function SetupScriptModal({ open, onClose, peerId, peerName }: SetupScrip
                   const cmd = getCommandForOs(step, selectedOs);
                   return (
                     <div key={i} className="rounded-lg border bg-card p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold">
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold mr-2">
-                              {i + 1}
-                            </span>
-                            {step.title}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mt-1 ml-7">{step.description}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="shrink-0 text-xs"
-                          onClick={() => copyCommand(i)}
-                        >
-                          {copiedStep === i ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                          {copiedStep === i ? 'Copied!' : 'Copy'}
-                        </Button>
-                      </div>
-                      <pre className="mt-3 ml-7 overflow-x-auto rounded-md bg-muted p-3 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all">
+                      <h3 className="text-sm font-semibold">
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold mr-2">
+                          {i + 1}
+                        </span>
+                        {step.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 ml-7">{step.description}</p>
+                      <pre className="mt-3 ml-7 overflow-x-auto rounded-md bg-muted p-3 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all select-all cursor-text">
                         {cmd}
                       </pre>
                     </div>

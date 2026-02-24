@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PeersRouteImport } from './routes/peers'
 import { Route as FirewallRouteImport } from './routes/firewall'
-import { Route as DnsRouteImport } from './routes/dns'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PeersIdRouteImport } from './routes/peers.$id'
 import { Route as ApiStatsIndexRouteImport } from './routes/api/stats/index'
 import { Route as ApiPeersIndexRouteImport } from './routes/api/peers/index'
 import { Route as ApiStatsPeerIdRouteImport } from './routes/api/stats/$peerId'
@@ -25,7 +25,6 @@ import { Route as ApiServerRestartRouteImport } from './routes/api/server/restar
 import { Route as ApiServerPublicIpRouteImport } from './routes/api/server/public-ip'
 import { Route as ApiServerKeysRouteImport } from './routes/api/server/keys'
 import { Route as ApiServerFirewallRouteImport } from './routes/api/server/firewall'
-import { Route as ApiServerDnsRouteImport } from './routes/api/server/dns'
 import { Route as ApiServerConfigRouteImport } from './routes/api/server/config'
 import { Route as ApiServerCheckRouteImport } from './routes/api/server/check'
 import { Route as ApiPeersIdRouteImport } from './routes/api/peers/$id'
@@ -34,6 +33,8 @@ import { Route as ApiAuthPasswordRouteImport } from './routes/api/auth/password'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiPeersIdToggleRouteImport } from './routes/api/peers/$id.toggle'
+import { Route as ApiPeersIdSystemInfoRouteImport } from './routes/api/peers/$id.system-info'
+import { Route as ApiPeersIdSshExecRouteImport } from './routes/api/peers/$id.ssh-exec'
 import { Route as ApiPeersIdSetupScriptRouteImport } from './routes/api/peers/$id.setup-script'
 import { Route as ApiPeersIdQrcodeRouteImport } from './routes/api/peers/$id.qrcode'
 import { Route as ApiPeersIdConfigRouteImport } from './routes/api/peers/$id.config'
@@ -53,15 +54,15 @@ const FirewallRoute = FirewallRouteImport.update({
   path: '/firewall',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DnsRoute = DnsRouteImport.update({
-  id: '/dns',
-  path: '/dns',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PeersIdRoute = PeersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => PeersRoute,
 } as any)
 const ApiStatsIndexRoute = ApiStatsIndexRouteImport.update({
   id: '/api/stats/',
@@ -118,11 +119,6 @@ const ApiServerFirewallRoute = ApiServerFirewallRouteImport.update({
   path: '/api/server/firewall',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiServerDnsRoute = ApiServerDnsRouteImport.update({
-  id: '/api/server/dns',
-  path: '/api/server/dns',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiServerConfigRoute = ApiServerConfigRouteImport.update({
   id: '/api/server/config',
   path: '/api/server/config',
@@ -163,6 +159,16 @@ const ApiPeersIdToggleRoute = ApiPeersIdToggleRouteImport.update({
   path: '/toggle',
   getParentRoute: () => ApiPeersIdRoute,
 } as any)
+const ApiPeersIdSystemInfoRoute = ApiPeersIdSystemInfoRouteImport.update({
+  id: '/system-info',
+  path: '/system-info',
+  getParentRoute: () => ApiPeersIdRoute,
+} as any)
+const ApiPeersIdSshExecRoute = ApiPeersIdSshExecRouteImport.update({
+  id: '/ssh-exec',
+  path: '/ssh-exec',
+  getParentRoute: () => ApiPeersIdRoute,
+} as any)
 const ApiPeersIdSetupScriptRoute = ApiPeersIdSetupScriptRouteImport.update({
   id: '/setup-script',
   path: '/setup-script',
@@ -181,10 +187,10 @@ const ApiPeersIdConfigRoute = ApiPeersIdConfigRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dns': typeof DnsRoute
   '/firewall': typeof FirewallRoute
-  '/peers': typeof PeersRoute
+  '/peers': typeof PeersRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/peers/$id': typeof PeersIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/password': typeof ApiAuthPasswordRoute
@@ -192,7 +198,6 @@ export interface FileRoutesByFullPath {
   '/api/peers/$id': typeof ApiPeersIdRouteWithChildren
   '/api/server/check': typeof ApiServerCheckRoute
   '/api/server/config': typeof ApiServerConfigRoute
-  '/api/server/dns': typeof ApiServerDnsRoute
   '/api/server/firewall': typeof ApiServerFirewallRoute
   '/api/server/keys': typeof ApiServerKeysRoute
   '/api/server/public-ip': typeof ApiServerPublicIpRoute
@@ -207,14 +212,16 @@ export interface FileRoutesByFullPath {
   '/api/peers/$id/config': typeof ApiPeersIdConfigRoute
   '/api/peers/$id/qrcode': typeof ApiPeersIdQrcodeRoute
   '/api/peers/$id/setup-script': typeof ApiPeersIdSetupScriptRoute
+  '/api/peers/$id/ssh-exec': typeof ApiPeersIdSshExecRoute
+  '/api/peers/$id/system-info': typeof ApiPeersIdSystemInfoRoute
   '/api/peers/$id/toggle': typeof ApiPeersIdToggleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dns': typeof DnsRoute
   '/firewall': typeof FirewallRoute
-  '/peers': typeof PeersRoute
+  '/peers': typeof PeersRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/peers/$id': typeof PeersIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/password': typeof ApiAuthPasswordRoute
@@ -222,7 +229,6 @@ export interface FileRoutesByTo {
   '/api/peers/$id': typeof ApiPeersIdRouteWithChildren
   '/api/server/check': typeof ApiServerCheckRoute
   '/api/server/config': typeof ApiServerConfigRoute
-  '/api/server/dns': typeof ApiServerDnsRoute
   '/api/server/firewall': typeof ApiServerFirewallRoute
   '/api/server/keys': typeof ApiServerKeysRoute
   '/api/server/public-ip': typeof ApiServerPublicIpRoute
@@ -237,15 +243,17 @@ export interface FileRoutesByTo {
   '/api/peers/$id/config': typeof ApiPeersIdConfigRoute
   '/api/peers/$id/qrcode': typeof ApiPeersIdQrcodeRoute
   '/api/peers/$id/setup-script': typeof ApiPeersIdSetupScriptRoute
+  '/api/peers/$id/ssh-exec': typeof ApiPeersIdSshExecRoute
+  '/api/peers/$id/system-info': typeof ApiPeersIdSystemInfoRoute
   '/api/peers/$id/toggle': typeof ApiPeersIdToggleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dns': typeof DnsRoute
   '/firewall': typeof FirewallRoute
-  '/peers': typeof PeersRoute
+  '/peers': typeof PeersRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/peers/$id': typeof PeersIdRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/password': typeof ApiAuthPasswordRoute
@@ -253,7 +261,6 @@ export interface FileRoutesById {
   '/api/peers/$id': typeof ApiPeersIdRouteWithChildren
   '/api/server/check': typeof ApiServerCheckRoute
   '/api/server/config': typeof ApiServerConfigRoute
-  '/api/server/dns': typeof ApiServerDnsRoute
   '/api/server/firewall': typeof ApiServerFirewallRoute
   '/api/server/keys': typeof ApiServerKeysRoute
   '/api/server/public-ip': typeof ApiServerPublicIpRoute
@@ -268,16 +275,18 @@ export interface FileRoutesById {
   '/api/peers/$id/config': typeof ApiPeersIdConfigRoute
   '/api/peers/$id/qrcode': typeof ApiPeersIdQrcodeRoute
   '/api/peers/$id/setup-script': typeof ApiPeersIdSetupScriptRoute
+  '/api/peers/$id/ssh-exec': typeof ApiPeersIdSshExecRoute
+  '/api/peers/$id/system-info': typeof ApiPeersIdSystemInfoRoute
   '/api/peers/$id/toggle': typeof ApiPeersIdToggleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dns'
     | '/firewall'
     | '/peers'
     | '/settings'
+    | '/peers/$id'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/password'
@@ -285,7 +294,6 @@ export interface FileRouteTypes {
     | '/api/peers/$id'
     | '/api/server/check'
     | '/api/server/config'
-    | '/api/server/dns'
     | '/api/server/firewall'
     | '/api/server/keys'
     | '/api/server/public-ip'
@@ -300,14 +308,16 @@ export interface FileRouteTypes {
     | '/api/peers/$id/config'
     | '/api/peers/$id/qrcode'
     | '/api/peers/$id/setup-script'
+    | '/api/peers/$id/ssh-exec'
+    | '/api/peers/$id/system-info'
     | '/api/peers/$id/toggle'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/dns'
     | '/firewall'
     | '/peers'
     | '/settings'
+    | '/peers/$id'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/password'
@@ -315,7 +325,6 @@ export interface FileRouteTypes {
     | '/api/peers/$id'
     | '/api/server/check'
     | '/api/server/config'
-    | '/api/server/dns'
     | '/api/server/firewall'
     | '/api/server/keys'
     | '/api/server/public-ip'
@@ -330,14 +339,16 @@ export interface FileRouteTypes {
     | '/api/peers/$id/config'
     | '/api/peers/$id/qrcode'
     | '/api/peers/$id/setup-script'
+    | '/api/peers/$id/ssh-exec'
+    | '/api/peers/$id/system-info'
     | '/api/peers/$id/toggle'
   id:
     | '__root__'
     | '/'
-    | '/dns'
     | '/firewall'
     | '/peers'
     | '/settings'
+    | '/peers/$id'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/password'
@@ -345,7 +356,6 @@ export interface FileRouteTypes {
     | '/api/peers/$id'
     | '/api/server/check'
     | '/api/server/config'
-    | '/api/server/dns'
     | '/api/server/firewall'
     | '/api/server/keys'
     | '/api/server/public-ip'
@@ -360,14 +370,15 @@ export interface FileRouteTypes {
     | '/api/peers/$id/config'
     | '/api/peers/$id/qrcode'
     | '/api/peers/$id/setup-script'
+    | '/api/peers/$id/ssh-exec'
+    | '/api/peers/$id/system-info'
     | '/api/peers/$id/toggle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DnsRoute: typeof DnsRoute
   FirewallRoute: typeof FirewallRoute
-  PeersRoute: typeof PeersRoute
+  PeersRoute: typeof PeersRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -376,7 +387,6 @@ export interface RootRouteChildren {
   ApiPeersIdRoute: typeof ApiPeersIdRouteWithChildren
   ApiServerCheckRoute: typeof ApiServerCheckRoute
   ApiServerConfigRoute: typeof ApiServerConfigRoute
-  ApiServerDnsRoute: typeof ApiServerDnsRoute
   ApiServerFirewallRoute: typeof ApiServerFirewallRoute
   ApiServerKeysRoute: typeof ApiServerKeysRoute
   ApiServerPublicIpRoute: typeof ApiServerPublicIpRoute
@@ -413,19 +423,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FirewallRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dns': {
-      id: '/dns'
-      path: '/dns'
-      fullPath: '/dns'
-      preLoaderRoute: typeof DnsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/peers/$id': {
+      id: '/peers/$id'
+      path: '/$id'
+      fullPath: '/peers/$id'
+      preLoaderRoute: typeof PeersIdRouteImport
+      parentRoute: typeof PeersRoute
     }
     '/api/stats/': {
       id: '/api/stats/'
@@ -504,13 +514,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiServerFirewallRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/server/dns': {
-      id: '/api/server/dns'
-      path: '/api/server/dns'
-      fullPath: '/api/server/dns'
-      preLoaderRoute: typeof ApiServerDnsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/server/config': {
       id: '/api/server/config'
       path: '/api/server/config'
@@ -567,6 +570,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPeersIdToggleRouteImport
       parentRoute: typeof ApiPeersIdRoute
     }
+    '/api/peers/$id/system-info': {
+      id: '/api/peers/$id/system-info'
+      path: '/system-info'
+      fullPath: '/api/peers/$id/system-info'
+      preLoaderRoute: typeof ApiPeersIdSystemInfoRouteImport
+      parentRoute: typeof ApiPeersIdRoute
+    }
+    '/api/peers/$id/ssh-exec': {
+      id: '/api/peers/$id/ssh-exec'
+      path: '/ssh-exec'
+      fullPath: '/api/peers/$id/ssh-exec'
+      preLoaderRoute: typeof ApiPeersIdSshExecRouteImport
+      parentRoute: typeof ApiPeersIdRoute
+    }
     '/api/peers/$id/setup-script': {
       id: '/api/peers/$id/setup-script'
       path: '/setup-script'
@@ -591,10 +608,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PeersRouteChildren {
+  PeersIdRoute: typeof PeersIdRoute
+}
+
+const PeersRouteChildren: PeersRouteChildren = {
+  PeersIdRoute: PeersIdRoute,
+}
+
+const PeersRouteWithChildren = PeersRoute._addFileChildren(PeersRouteChildren)
+
 interface ApiPeersIdRouteChildren {
   ApiPeersIdConfigRoute: typeof ApiPeersIdConfigRoute
   ApiPeersIdQrcodeRoute: typeof ApiPeersIdQrcodeRoute
   ApiPeersIdSetupScriptRoute: typeof ApiPeersIdSetupScriptRoute
+  ApiPeersIdSshExecRoute: typeof ApiPeersIdSshExecRoute
+  ApiPeersIdSystemInfoRoute: typeof ApiPeersIdSystemInfoRoute
   ApiPeersIdToggleRoute: typeof ApiPeersIdToggleRoute
 }
 
@@ -602,6 +631,8 @@ const ApiPeersIdRouteChildren: ApiPeersIdRouteChildren = {
   ApiPeersIdConfigRoute: ApiPeersIdConfigRoute,
   ApiPeersIdQrcodeRoute: ApiPeersIdQrcodeRoute,
   ApiPeersIdSetupScriptRoute: ApiPeersIdSetupScriptRoute,
+  ApiPeersIdSshExecRoute: ApiPeersIdSshExecRoute,
+  ApiPeersIdSystemInfoRoute: ApiPeersIdSystemInfoRoute,
   ApiPeersIdToggleRoute: ApiPeersIdToggleRoute,
 }
 
@@ -611,9 +642,8 @@ const ApiPeersIdRouteWithChildren = ApiPeersIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DnsRoute: DnsRoute,
   FirewallRoute: FirewallRoute,
-  PeersRoute: PeersRoute,
+  PeersRoute: PeersRouteWithChildren,
   SettingsRoute: SettingsRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
@@ -622,7 +652,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPeersIdRoute: ApiPeersIdRouteWithChildren,
   ApiServerCheckRoute: ApiServerCheckRoute,
   ApiServerConfigRoute: ApiServerConfigRoute,
-  ApiServerDnsRoute: ApiServerDnsRoute,
   ApiServerFirewallRoute: ApiServerFirewallRoute,
   ApiServerKeysRoute: ApiServerKeysRoute,
   ApiServerPublicIpRoute: ApiServerPublicIpRoute,

@@ -1,5 +1,4 @@
 import { getSetting, type PeerRow } from './db';
-import { getDnsmasqStatus } from './dns';
 
 export async function generateServerConfig(
   peers: PeerRow[]
@@ -37,18 +36,7 @@ export async function generatePeerConfig(peer: PeerRow): Promise<string> {
   const serverEndpoint = (await getSetting('server_endpoint')) || '';
   const serverLocalIp = (await getSetting('server_local_ip')) || '';
   const serverPort = (await getSetting('server_port')) || '51820';
-  let dns = peer.dns || (await getSetting('server_dns')) || '1.1.1.1';
-
-  // Prepend the server's VPN IP as DNS so peers can resolve custom DNS records
-  const dnsmasqStatus = await getDnsmasqStatus();
-  if (dnsmasqStatus.running) {
-    const serverAddr = (await getSetting('server_address')) || '10.8.0.1/24';
-    const serverVpnIp = serverAddr.split('/')[0];
-    const existing = dns.split(',').map((s) => s.trim());
-    if (!existing.includes(serverVpnIp)) {
-      dns = `${serverVpnIp}, ${dns}`;
-    }
-  }
+  const dns = peer.dns || (await getSetting('server_dns')) || '1.1.1.1';
 
   let config = `[Interface]
 PrivateKey = ${peer.private_key}

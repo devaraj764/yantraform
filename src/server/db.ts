@@ -8,10 +8,12 @@ let _migrated = false;
 // Import migrations inline so Nitro bundles them (no filesystem lookup at runtime)
 import * as initialSchema from '../migrations/20260222000000_initial_schema';
 import * as renamePeerTypes from '../migrations/20260223000000_rename_peer_types';
+import * as setupCommands from '../migrations/20260224000000_setup_commands';
 
 const inlineMigrations = [
   { name: '20260222000000_initial_schema', migration: initialSchema },
   { name: '20260223000000_rename_peer_types', migration: renamePeerTypes },
+  { name: '20260224000000_setup_commands', migration: setupCommands },
 ];
 
 class InlineMigrationSource implements Knex.MigrationSource<{ name: string; migration: any }> {
@@ -211,4 +213,68 @@ export async function cleanupOldStats(): Promise<void> {
   await db('traffic_stats')
     .whereRaw("recorded_at < datetime('now', '-30 days')")
     .del();
+}
+
+// --- Setup Commands ---
+export interface SetupCommandRow {
+  id: number;
+  os_type: string;
+  command_type: string;
+  command: string;
+  sort_order: number;
+}
+
+export async function getSetupCommands(osType?: string): Promise<SetupCommandRow[]> {
+  const db = await ensureMigrated();
+  let q = db('setup_commands').select('*').orderBy('sort_order', 'asc');
+  if (osType) q = q.where({ os_type: osType });
+  return q;
+}
+
+export async function getSetupCommandsByType(commandType: string): Promise<SetupCommandRow[]> {
+  const db = await ensureMigrated();
+  return db('setup_commands')
+    .select('*')
+    .where({ command_type: commandType })
+    .orderBy('os_type', 'asc');
+}
+
+export async function upsertSetupCommand(
+  osType: string,
+  commandType: string,
+  command: string,
+  sortOrder?: number
+): Promise<void> {
+  const db = await ensureMigrated();
+  const existing = await db('setup_commands')
+    .where({ os_type: osType, command_type: commandType })
+    .first();
+  if (existing) {
+    await db('setup_commands')
+      .where({ id: existing.id })
+      .update({ command, ...(sortOrder !== undefined ? { sort_order: sortOrder } : {}) });
+  } else {
+    await db('setup_commands').insert({
+      os_type: osType,
+      command_type: commandType,
+      command,
+      sort_order: sortOrder ?? 0,
+    });
+  }
+}
+
+export async function deleteSetupCommand(id: number): Promise<void> {
+  const db = await ensureMigrated();
+  await db('setup_commands').where({ id }).del();
+}
+
+export async function getAllSetupCommandsGrouped(): Promise<Record<string, Record<string, string>>> {
+  const db = await ensureMigrated();
+  const rows: SetupCommandRow[] = await db('setup_commands').select('*').orderBy('sort_order', 'asc');
+  const grouped: Record<string, Record<string, string>> = {};
+  for (const row of rows) {
+    if (!grouped[row.command_type]) grouped[row.command_type] = {};
+    grouped[row.command_type][row.os_type] = row.command;
+  }
+  return grouped;
 }

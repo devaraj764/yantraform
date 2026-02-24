@@ -13,6 +13,8 @@ import {
   addPeerToInterface,
 } from '~/server/wireguard';
 import { updateHostsFile } from '~/server/hosts';
+import { startPingChecker, getPingResults } from '~/server/ping-checker';
+import { startStatsCollector } from '~/server/stats-collector';
 
 export const Route = createFileRoute('/api/peers/')({
   server: {
@@ -21,9 +23,13 @@ export const Route = createFileRoute('/api/peers/')({
         const authErr = await requireAuth(request);
         if (authErr) return authErr;
 
+        startPingChecker();
+        startStatsCollector();
+
         const peers = await getAllPeers();
         const iface = (await getSetting('server_interface')) || 'wg0';
         const status = await getInterfaceStatus(iface);
+        const pingMap = getPingResults();
 
         const peerStatusMap = new Map<string, any>();
         if (status) {
@@ -43,6 +49,10 @@ export const Route = createFileRoute('/api/peers/')({
             ? Date.now() / 1000 - live.latestHandshake
             : Infinity;
 
+          const peerIp = peer.address.split('/')[0];
+          const ping = pingMap.get(peerIp);
+          const pingAlive = ping?.alive ?? false;
+
           return {
             id: peer.id,
             name: peer.name,
@@ -58,11 +68,14 @@ export const Route = createFileRoute('/api/peers/')({
             networkType: peer.network_type,
             createdAt: peer.created_at,
             updatedAt: peer.updated_at,
-            connected: handshakeAge < 180,
+            connected: handshakeAge < 180 || pingAlive,
             latestHandshake: live?.latestHandshake || 0,
             transferRx: live?.transferRx || 0,
             transferTx: live?.transferTx || 0,
             endpoint: live?.endpoint || '(none)',
+            pingAlive,
+            pingLatencyMs: ping?.latencyMs ?? null,
+            lastPingCheck: ping?.lastCheck ?? 0,
           };
         });
 
