@@ -8,7 +8,7 @@
     "start": "sudo env \"PATH=$PATH\" PORT=51821 HOST=0.0.0.0 node .output/server/index.mjs",
     "dev:no-sudo": "vite dev",
     "start:no-sudo": "node .output/server/index.mjs",
-    "release": "sudo zip -qr yantraform.zip .output install.sh && gh release delete latest --yes 2>/dev/null; gh release create latest yantraform.zip --title \"Latest\" --notes \"Pre-built Yantraform dashboard. See README for install instructions.\"",
+    "release": "sudo zip -qr yantraform.zip .output && cd ignorables && sudo zip -j ../yantraform.zip install.sh uninstall.sh && cd .. && gh release delete latest --yes 2>/dev/null; gh release create latest yantraform.zip --title \"Latest\" --notes \"Pre-built Yantraform dashboard. See README for install instructions.\"",
     "docker": "docker build -t ghcr.io/devaraj764/yantraform:latest . && docker push ghcr.io/devaraj764/yantraform:latest"
   },
   "dependencies": {

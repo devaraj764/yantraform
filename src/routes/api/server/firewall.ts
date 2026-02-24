@@ -5,6 +5,8 @@ import {
   detectFirewall,
   addFirewallPort,
   removeFirewallPort,
+  enableFirewall,
+  disableFirewall,
 } from '~/server/firewall';
 
 export const Route = createFileRoute('/api/server/firewall')({
@@ -34,6 +36,24 @@ export const Route = createFileRoute('/api/server/firewall')({
 
         const firewall = await detectFirewall();
         const result = await addFirewallPort(firewall.type, port, protocol);
+        return Response.json(result, { status: result.success ? 200 : 400 });
+      },
+
+      PUT: async ({ request }) => {
+        const authErr = await requireAuth(request);
+        if (authErr) return authErr;
+
+        const firewall = await detectFirewall();
+        const result = await enableFirewall(firewall.type);
+        return Response.json(result, { status: result.success ? 200 : 400 });
+      },
+
+      PATCH: async ({ request }) => {
+        const authErr = await requireAuth(request);
+        if (authErr) return authErr;
+
+        const firewall = await detectFirewall();
+        const result = await disableFirewall(firewall.type);
         return Response.json(result, { status: result.success ? 200 : 400 });
       },
 

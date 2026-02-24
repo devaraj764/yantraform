@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   ShieldOff,
   CircleCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
@@ -120,6 +121,8 @@ function FirewallPage() {
   const [deletingSelected, setDeletingSelected] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [enabling, setEnabling] = useState(false);
+  const [disabling, setDisabling] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -226,6 +229,8 @@ function FirewallPage() {
   const rawRules = firewallStatus?.rules || '';
   const wgPort = serverStatus?.listenPort || 51820;
   const noFirewall = firewall?.type === 'none';
+  const firewallInactive = !noFirewall && !firewall?.active;
+  const canManage = !noFirewall && !firewallInactive;
 
   const allowRules = parsedRules.filter((r) => r.action === 'allow');
   const denyRules = parsedRules.filter((r) => r.action !== 'allow');
@@ -238,13 +243,39 @@ function FirewallPage() {
           <p className="text-muted-foreground">Manage firewall port rules</p>
         </div>
         <div className="flex items-center gap-2">
-          {selected.size > 0 && (
+          {selected.size > 0 && canManage && (
             <Button variant="destructive" onClick={() => setDeletingSelected(true)}>
               <Trash2 className="h-4 w-4 mr-2" />
               Delete Selected ({selected.size})
             </Button>
           )}
-          <Button onClick={() => setAddDialogOpen(true)} disabled={noFirewall}>
+          {firewall?.type === 'ufw' && firewall?.active && (
+            <Button
+              variant="outline"
+              className="border-amber-500/50 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
+              disabled={disabling}
+              onClick={async () => {
+                setDisabling(true);
+                try {
+                  const result = await api.server.disableFirewall();
+                  if (result.success) {
+                    setMessage({ type: 'success', text: result.message });
+                    handleRefresh();
+                  } else {
+                    setMessage({ type: 'error', text: result.message });
+                  }
+                } catch (err: any) {
+                  setMessage({ type: 'error', text: err?.message || 'Failed to disable UFW' });
+                } finally {
+                  setDisabling(false);
+                }
+              }}
+            >
+              <ShieldOff className="h-4 w-4 mr-2" />
+              {disabling ? 'Disabling...' : 'Disable UFW'}
+            </Button>
+          )}
+          <Button onClick={() => setAddDialogOpen(true)} disabled={!canManage}>
             <Plus className="h-4 w-4 mr-2" />
             Add Rule
           </Button>
@@ -254,6 +285,57 @@ function FirewallPage() {
           </Button>
         </div>
       </div>
+
+      {/* Firewall inactive warning */}
+      {firewallInactive && (
+        <div className="flex items-start gap-2 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-4">
+          <ShieldOff className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+          <div className="flex-1 text-sm text-yellow-700 dark:text-yellow-300">
+            <p className="font-medium">{firewall?.type?.toUpperCase()} is installed but inactive</p>
+            <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
+              Enable your firewall first before managing rules.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 border-yellow-500/50 text-yellow-700 hover:bg-yellow-500/20 dark:text-yellow-300"
+              disabled={enabling}
+              onClick={async () => {
+                setEnabling(true);
+                try {
+                  const result = await api.server.enableFirewall();
+                  if (result.success) {
+                    setMessage({ type: 'success', text: result.message });
+                    handleRefresh();
+                  } else {
+                    setMessage({ type: 'error', text: result.message });
+                  }
+                } catch (err: any) {
+                  setMessage({ type: 'error', text: err?.message || 'Failed to enable firewall' });
+                } finally {
+                  setEnabling(false);
+                }
+              }}
+            >
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              {enabling ? 'Enabling...' : `Enable ${firewall?.type?.toUpperCase()}`}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* UFW active warning */}
+      {firewall?.type === 'ufw' && firewall?.active && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-4">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="flex-1 text-sm text-amber-700 dark:text-amber-300">
+            <p className="font-medium">UFW is managing your firewall rules</p>
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              If you are using a cloud provider (AWS, DigitalOcean, GCP, Azure, etc.), make sure to disable the provider's built-in firewall or security group rules so they don't conflict with UFW. Otherwise, traffic may be blocked before it reaches UFW.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Status message */}
       {message && (
@@ -339,6 +421,7 @@ function FirewallPage() {
             rules={parsedRules}
             wgPort={wgPort}
             noFirewall={noFirewall}
+            canManage={canManage}
             selected={selected}
             onSelectionChange={setSelected}
             onDelete={(port, protocol) => setDeletingRule({ port, protocol })}
@@ -508,6 +591,7 @@ function RulesTable({
   rules,
   wgPort,
   noFirewall,
+  canManage,
   selected,
   onSelectionChange,
   onDelete,
@@ -515,11 +599,11 @@ function RulesTable({
   rules: FirewallRule[];
   wgPort: number;
   noFirewall: boolean;
+  canManage: boolean;
   selected: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
   onDelete: (port: number, protocol: 'tcp' | 'udp') => void;
 }) {
-  const canManage = !noFirewall;
 
   // Only safe allow-rules can be selected
   const selectableRules = rules.filter(

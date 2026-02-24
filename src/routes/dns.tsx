@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Play, Square, RotateCw, Settings2, Plus, Trash2 } from 'lucide-react';
+import { RefreshCw, Play, Square, RotateCw, Settings2, Plus, Trash2, Info } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
@@ -126,6 +126,15 @@ function DnsPage() {
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
+      </div>
+
+      {/* Info note */}
+      <div className="flex items-start gap-2 rounded-md border border-blue-500/50 bg-blue-500/10 p-3">
+        <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          Custom DNS records only work on desktop and server operating systems (Windows, macOS, Linux).
+          Mobile devices (iOS, Android) do not support per-tunnel DNS resolution for custom hostnames.
+        </p>
       </div>
 
       {/* Status message */}

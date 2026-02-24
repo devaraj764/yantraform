@@ -27,6 +27,52 @@ export interface FirewallMutationResult {
   message: string;
 }
 
+export async function enableFirewall(
+  firewallType: FirewallInfo['type'],
+): Promise<FirewallMutationResult> {
+  try {
+    switch (firewallType) {
+      case 'ufw':
+        await runCmdStrict('echo "y" | sudo ufw enable');
+        break;
+      case 'firewalld':
+        await runCmdStrict('sudo systemctl start firewalld && sudo systemctl enable firewalld');
+        break;
+      case 'iptables':
+      case 'nftables':
+        return { success: false, message: `Cannot auto-enable ${firewallType}. Enable it manually.` };
+      case 'none':
+        return { success: false, message: 'No firewall detected to enable' };
+    }
+    return { success: true, message: 'Firewall enabled' };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Failed to enable firewall' };
+  }
+}
+
+export async function disableFirewall(
+  firewallType: FirewallInfo['type'],
+): Promise<FirewallMutationResult> {
+  try {
+    switch (firewallType) {
+      case 'ufw':
+        await runCmdStrict('sudo ufw disable');
+        break;
+      case 'firewalld':
+        await runCmdStrict('sudo systemctl stop firewalld && sudo systemctl disable firewalld');
+        break;
+      case 'iptables':
+      case 'nftables':
+        return { success: false, message: `Cannot auto-disable ${firewallType}. Disable it manually.` };
+      case 'none':
+        return { success: false, message: 'No firewall detected to disable' };
+    }
+    return { success: true, message: 'Firewall disabled' };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Failed to disable firewall' };
+  }
+}
+
 export async function addFirewallPort(
   firewallType: FirewallInfo['type'],
   port: number,

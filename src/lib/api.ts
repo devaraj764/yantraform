@@ -89,7 +89,7 @@ export const api = {
     config: (id: string) =>
       request<{ config: string; filename: string }>(`/api/peers/${id}/config`),
     setupScript: (id: string) =>
-      request<{ script: string; hasSshKey: boolean }>(`/api/peers/${id}/setup-script`),
+      request<{ steps: { title: string; description: string; command?: string; commands?: Record<string, string> }[]; hasSshKey: boolean }>(`/api/peers/${id}/setup-script`),
   },
 
   server: {
@@ -122,6 +122,10 @@ export const api = {
         method: 'DELETE',
         body: JSON.stringify({ port, protocol }),
       }),
+    enableFirewall: () =>
+      request<{ success: boolean; message: string }>('/api/server/firewall', { method: 'PUT' }),
+    disableFirewall: () =>
+      request<{ success: boolean; message: string }>('/api/server/firewall', { method: 'PATCH' }),
     detectSshKey: () =>
       request<{ key: string; generated: boolean }>('/api/server/ssh-key', { method: 'POST' }),
   },

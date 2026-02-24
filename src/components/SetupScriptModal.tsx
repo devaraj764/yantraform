@@ -10,6 +10,26 @@ import { Button } from '~/components/ui/button';
 import { api } from '~/lib/api';
 import { Copy, Check, TriangleAlert } from 'lucide-react';
 
+const OS_OPTIONS = [
+  { id: 'ubuntu', label: 'Ubuntu' },
+  { id: 'debian', label: 'Debian' },
+  { id: 'fedora', label: 'Fedora' },
+  { id: 'centos', label: 'CentOS' },
+  { id: 'arch', label: 'Arch' },
+  { id: 'alpine', label: 'Alpine' },
+  { id: 'macos', label: 'macOS' },
+  { id: 'windows', label: 'Windows' },
+] as const;
+
+type OsId = (typeof OS_OPTIONS)[number]['id'];
+
+interface Step {
+  title: string;
+  description: string;
+  command?: string;
+  commands?: Record<string, string>;
+}
+
 interface SetupScriptModalProps {
   open: boolean;
   onClose: () => void;
@@ -17,42 +37,61 @@ interface SetupScriptModalProps {
   peerName: string;
 }
 
+function getCommandForOs(step: Step, os: OsId): string {
+  if (step.commands && step.commands[os]) return step.commands[os];
+  if (step.command) return step.command;
+  return '';
+}
+
 export function SetupScriptModal({ open, onClose, peerId, peerName }: SetupScriptModalProps) {
-  const [script, setScript] = useState('');
+  const [steps, setSteps] = useState<Step[]>([]);
   const [hasSshKey, setHasSshKey] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [selectedOs, setSelectedOs] = useState<OsId>('ubuntu');
+  const [copiedStep, setCopiedStep] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open || !peerId) return;
     setLoading(true);
     setError('');
+    setCopiedStep(null);
     api.peers.setupScript(peerId)
       .then((result) => {
-        setScript(result.script);
+        setSteps(result.steps);
         setHasSshKey(result.hasSshKey);
       })
       .catch((e) => setError(e.message || 'Failed to generate script'))
       .finally(() => setLoading(false));
   }, [open, peerId]);
 
-  const copyScript = async () => {
-    await navigator.clipboard.writeText(script);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyCommand = async (index: number) => {
+    const cmd = getCommandForOs(steps[index], selectedOs);
+    await navigator.clipboard.writeText(cmd);
+    setCopiedStep(index);
+    setTimeout(() => setCopiedStep(null), 2000);
+  };
+
+  const copyAll = async () => {
+    const full = steps
+      .map((s, i) => `# Step ${i + 1}: ${s.title}\n${getCommandForOs(s, selectedOs)}`)
+      .join('\n\n');
+    await navigator.clipboard.writeText(full);
+    setCopiedStep(-1);
+    setTimeout(() => setCopiedStep(null), 2000);
   };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Setup Script — {peerName}</DialogTitle>
+          <DialogTitle>Setup Guide — {peerName}</DialogTitle>
           <DialogDescription>
-            SSH into your remote machine and paste this script to install WireGuard and connect to the VPN.
+            Run these commands on your remote machine.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-3 py-2 overflow-hidden min-h-0">
+
+        <div className="flex flex-col gap-3 py-2 overflow-hidden min-h-0 flex-1">
           {loading ? (
             <div className="flex h-48 items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -67,24 +106,76 @@ export function SetupScriptModal({ open, onClose, peerId, peerName }: SetupScrip
                   <div className="text-sm text-yellow-700 dark:text-yellow-300">
                     <p className="font-medium">No SSH public key configured</p>
                     <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
-                      The script won't set up SSH access from the master server.
-                      Add your SSH public key in <strong>Settings</strong> to enable this.
+                      SSH key step is skipped. Add your key in <strong>Settings</strong> to enable it.
                     </p>
                   </div>
                 </div>
               )}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Copy and run via SSH on the target machine
-                </span>
-                <Button variant="outline" size="sm" onClick={copyScript}>
-                  {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                  {copied ? 'Copied!' : 'Copy Script'}
+
+              {/* OS selector + Copy All */}
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {OS_OPTIONS.map((os) => (
+                    <button
+                      key={os.id}
+                      onClick={() => setSelectedOs(os.id)}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                        selectedOs === os.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {os.label}
+                    </button>
+                  ))}
+                  <div className="flex-1" />
+                  <Button variant="outline" size="sm" className="text-xs" onClick={copyAll}>
+                    {copiedStep === -1 ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                    {copiedStep === -1 ? 'Copied!' : 'Copy All'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* All steps in a scrollable list */}
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+                {steps.map((step, i) => {
+                  const cmd = getCommandForOs(step, selectedOs);
+                  return (
+                    <div key={i} className="rounded-lg border bg-card p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold">
+                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold mr-2">
+                              {i + 1}
+                            </span>
+                            {step.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1 ml-7">{step.description}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 text-xs"
+                          onClick={() => copyCommand(i)}
+                        >
+                          {copiedStep === i ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                          {copiedStep === i ? 'Copied!' : 'Copy'}
+                        </Button>
+                      </div>
+                      <pre className="mt-3 ml-7 overflow-x-auto rounded-md bg-muted p-3 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all">
+                        {cmd}
+                      </pre>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end pt-1">
+                <Button variant="outline" onClick={onClose}>
+                  Done
                 </Button>
               </div>
-              <pre className="flex-1 min-h-0 overflow-auto rounded-md bg-muted p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all">
-{script}
-              </pre>
             </>
           )}
         </div>
